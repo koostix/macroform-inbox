@@ -1,13 +1,13 @@
 import Foundation
 
-public enum Origin: String, Sendable, Equatable {
+public enum Origin: String, Sendable, Equatable, Hashable {
     case inbox
     case start
     case revise
     case logic
 }
 
-public struct Pile: Equatable, Identifiable, Sendable {
+public struct Pile: Equatable, Hashable, Identifiable, Sendable {
     public var id: URL { sourceURL }
     public var sourceURL: URL
     public var origin: Origin
