@@ -31,7 +31,7 @@ Open **Macroform Inbox** from Applications or Spotlight. No Terminal after that.
 - Opens your inbox, or **any folder** (`⌘O`)
 - Lists dumps, named projects, Logic packages, and leftover loose files
 - Click a file to preview it on a scrubbable waveform
-- Tap tempo (`⌘T`) when the session never wrote a BPM
+- Tap tempo (Space) when the session never wrote a BPM, or file as `000`
 - Renames in place, moves to `_Start`, or files into a folder you choose
 - Wraps loose audio into a new named project folder
 
@@ -56,9 +56,9 @@ Any other folder works. Open it and organize what is there.
 
 | Key | Action |
 |---|---|
-| Space | Play / pause |
+| Space | Tap tempo |
+| Click a file | Play / pause that preview |
 | Return | File it |
-| ⌘T | Tap tempo |
 | ⌘O | Open any folder |
 | ⇧⌘I | Back to Inbox |
 | ⌘↩ | File it |

@@ -34,6 +34,20 @@ final class ProjectNameTests: XCTestCase {
         XCTAssertFalse(ProjectName(yymmdd: "260323", description: "toy", bpm: 301).isValid)
         XCTAssertTrue(ProjectName(yymmdd: "260323", description: "toy", bpm: 20).isValid)
         XCTAssertTrue(ProjectName(yymmdd: "260323", description: "toy", bpm: 300).isValid)
+        XCTAssertTrue(ProjectName(yymmdd: "260323", description: "toy", bpm: 0).isValid)
+    }
+
+    func testZeroBpmRendersAs000() {
+        let name = ProjectName(yymmdd: "260323", description: "drone wash", bpm: 0)
+        XCTAssertEqual(name.folderName, "260323_drone wash_000")
+        XCTAssertEqual(name.bpmLabel, "000")
+    }
+
+    func testParseReads000AsNoTempo() {
+        let parsed = ProjectName.parse("260323_drone wash_000")
+        XCTAssertEqual(parsed?.yymmdd, "260323")
+        XCTAssertEqual(parsed?.description, "drone wash")
+        XCTAssertEqual(parsed?.bpm, 0)
     }
 
     func testYymmddFromDateUsesInjectedCalendar() {

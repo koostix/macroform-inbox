@@ -9,7 +9,7 @@ struct MacroformInboxApp: App {
             InboxView(viewModel: viewModel)
                 .focusable()
                 .onKeyPress(.space) {
-                    viewModel.player.toggle()
+                    viewModel.tapBeat()
                     return .handled
                 }
         }
@@ -34,12 +34,8 @@ struct MacroformInboxApp: App {
 
                 Divider()
 
-                Button("Play/Pause Preview") { viewModel.player.toggle() }
-                    .keyboardShortcut(.space, modifiers: [])
-                    .disabled(viewModel.selectedPreviewURL == nil)
-
                 Button("Tap Tempo") { viewModel.tapBeat() }
-                    .keyboardShortcut("t", modifiers: [.command])
+                    .keyboardShortcut(.space, modifiers: [])
                     .disabled(viewModel.selectedPile == nil)
 
                 Divider()

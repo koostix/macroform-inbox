@@ -171,13 +171,13 @@ struct InboxView: View {
                     TextField("Description", text: $viewModel.descriptionText)
                         .textFieldStyle(.roundedBorder)
                     HStack(alignment: .center, spacing: 8) {
-                        TextField("BPM", text: $viewModel.bpmText)
+                        TextField("BPM or 000", text: $viewModel.bpmText)
                             .textFieldStyle(.roundedBorder)
                             .frame(maxWidth: 140)
                         Button(viewModel.tapCount > 0 ? "Tap (\(viewModel.tapCount))" : "Tap") {
                             viewModel.tapBeat()
                         }
-                        .help("Tap a quarter note. ⌘T")
+                        .help("Space: tap a quarter note. Leave 000 if there is no tempo. Click a file to play.")
                     }
 
                     if !viewModel.proposedFolderName.isEmpty {

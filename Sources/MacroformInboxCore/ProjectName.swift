@@ -15,14 +15,22 @@ public struct ProjectName: Equatable, Sendable {
         Self.sanitize(description)
     }
 
+    public var bpmLabel: String {
+        bpm == 0 ? "000" : String(bpm)
+    }
+
     public var folderName: String {
-        "\(yymmdd)_\(sanitizedDescription)_\(bpm)"
+        "\(yymmdd)_\(sanitizedDescription)_\(bpmLabel)"
     }
 
     public var isValid: Bool {
         yymmdd.range(of: #"^\d{6}$"#, options: .regularExpression) != nil
             && !sanitizedDescription.isEmpty
-            && (20...300).contains(bpm)
+            && Self.isAllowedBPM(bpm)
+    }
+
+    public static func isAllowedBPM(_ bpm: Int) -> Bool {
+        bpm == 0 || (20...300).contains(bpm)
     }
 
     public static func sanitize(_ raw: String) -> String {
@@ -81,7 +89,7 @@ public struct ProjectName: Equatable, Sendable {
         var bpm: Int?
         if let bpmMatch = rest.range(of: #"_\d{2,3}$"#, options: .regularExpression) {
             let digits = rest[bpmMatch].dropFirst()
-            if let parsed = Int(digits), (20...300).contains(parsed) {
+            if let parsed = Int(digits), isAllowedBPM(parsed) {
                 bpm = parsed
                 rest.removeSubrange(bpmMatch)
             }

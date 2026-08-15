@@ -308,7 +308,7 @@ final class InboxViewModel: ObservableObject {
         if let parsed = ProjectName.parse(pile.displayName) {
             dateText = parsed.yymmdd
             descriptionText = parsed.description
-            bpmText = parsed.bpm.map(String.init) ?? ""
+            bpmText = parsed.bpm.map { $0 == 0 ? "000" : String($0) } ?? ""
             return
         }
         dateText = ProjectName.defaultDate(fromDisplayName: pile.displayName, oldest: pile.oldestFileDate)

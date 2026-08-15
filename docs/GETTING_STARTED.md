@@ -47,7 +47,7 @@ YYMMDD_description_BPM
 
 - **Date** defaults to the date already on the folder, or the oldest file.
 - **Description** — spaces are fine. Slashes and colons become spaces.
-- **BPM** is required (20–300). If the session never stored a tempo (Tascam DP-32 / DP-008 exports do not), play the mix and tap a quarter note with **Tap** or `⌘T`. Two taps fills the field.
+- **BPM** is 20–300, or **000** if the song has no tempo. Click a file to play it. Tap a quarter note with **Space**. Two taps fills the field. Leave `000` for drones, rubato, or Tascam dumps with no click.
 
 Already-named folders are parsed so you can retitle them.
 

@@ -3,6 +3,6 @@ import XCTest
 
 final class MacroformInboxCoreTests: XCTestCase {
     func testPackageLoads() {
-        XCTAssertEqual(MacroformInboxCore.version, "0.2.0")
+        XCTAssertEqual(MacroformInboxCore.version, "0.3.0")
     }
 }

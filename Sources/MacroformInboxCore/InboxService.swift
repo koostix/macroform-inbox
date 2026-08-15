@@ -76,6 +76,6 @@ public enum InboxServiceError: Error, Equatable, LocalizedError {
     case invalidProjectName
 
     public var errorDescription: String? {
-        "Enter a description, a six-digit date, and a BPM from 20 to 300."
+        "Enter a description, a six-digit date, and a BPM from 20 to 300 — or 000 if there is no tempo."
     }
 }
