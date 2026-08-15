@@ -1,12 +1,12 @@
 import XCTest
-@testable import MacroformInboxCore
+@testable import MusicProjectsOrganizerCore
 
 final class PreviewPickerTests: XCTestCase {
     private var tempRoot: URL!
 
     override func setUpWithError() throws {
         tempRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MacroformInbox-preview-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("MusicProjectsOrganizer-preview-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
     }
 

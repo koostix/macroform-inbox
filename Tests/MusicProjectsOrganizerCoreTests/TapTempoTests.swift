@@ -1,5 +1,5 @@
 import XCTest
-@testable import MacroformInboxCore
+@testable import MusicProjectsOrganizerCore
 
 final class TapTempoTests: XCTestCase {
     func testTwoTapsHalfSecondApartAre120() {

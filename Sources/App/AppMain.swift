@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct MacroformInboxApp: App {
+struct MusicProjectsOrganizerApp: App {
     @StateObject private var viewModel = InboxViewModel()
 
     var body: some Scene {
-        WindowGroup("Macroform Inbox") {
+        WindowGroup("Music Projects Organizer") {
             InboxView(viewModel: viewModel)
                 .focusable()
                 .onKeyPress(.space) {
@@ -58,5 +58,5 @@ struct MacroformInboxApp: App {
 }
 
 extension Notification.Name {
-    static let macroformInboxReload = Notification.Name("macroformInboxReload")
+    static let musicProjectsOrganizerReload = Notification.Name("musicProjectsOrganizerReload")
 }

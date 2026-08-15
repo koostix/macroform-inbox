@@ -1,5 +1,5 @@
 import XCTest
-@testable import MacroformInboxCore
+@testable import MusicProjectsOrganizerCore
 
 final class PileMoverTests: XCTestCase {
     private var tempRoot: URL!
@@ -7,7 +7,7 @@ final class PileMoverTests: XCTestCase {
 
     override func setUpWithError() throws {
         tempRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MacroformInbox-mover-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("MusicProjectsOrganizer-mover-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
         workbench = Workbench(
             root: tempRoot.appendingPathComponent("_Music Projects", isDirectory: true),

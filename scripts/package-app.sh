@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP_NAME="Macroform Inbox"
-EXEC_NAME="MacroformInbox"
+APP_NAME="Music Projects Organizer"
+EXEC_NAME="MusicProjectsOrganizer"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 CONTENTS="$APP/Contents"

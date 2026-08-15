@@ -1,12 +1,12 @@
 import XCTest
-@testable import MacroformInboxCore
+@testable import MusicProjectsOrganizerCore
 
 final class LooseFileWrapperTests: XCTestCase {
     private var tempRoot: URL!
 
     override func setUpWithError() throws {
         tempRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MacroformInbox-wrap-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("MusicProjectsOrganizer-wrap-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
     }
 

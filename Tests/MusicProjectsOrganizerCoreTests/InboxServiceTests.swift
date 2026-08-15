@@ -1,5 +1,5 @@
 import XCTest
-@testable import MacroformInboxCore
+@testable import MusicProjectsOrganizerCore
 
 final class InboxServiceTests: XCTestCase {
     private var tempRoot: URL!
@@ -7,7 +7,7 @@ final class InboxServiceTests: XCTestCase {
 
     override func setUpWithError() throws {
         tempRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MacroformInbox-service-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("MusicProjectsOrganizer-service-\(UUID().uuidString)", isDirectory: true)
         workbench = Workbench(
             root: tempRoot.appendingPathComponent("_Music Projects", isDirectory: true),
             logicProjects: tempRoot.appendingPathComponent("Logic", isDirectory: true)

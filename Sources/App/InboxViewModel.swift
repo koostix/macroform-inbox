@@ -1,6 +1,6 @@
 import AppKit
 import Foundation
-import MacroformInboxCore
+import MusicProjectsOrganizerCore
 import SwiftUI
 
 enum FileDestination: String, CaseIterable, Identifiable {
@@ -39,7 +39,7 @@ final class InboxViewModel: ObservableObject {
     let player = PreviewPlayer()
 
     let service: InboxService
-    private let scanRootKey = "macroform.scanRoot"
+    private let scanRootKey = "musicprojects.scanRoot"
     private var tapTempo = TapTempo()
 
     init(service: InboxService = InboxService(workbench: .live())) {

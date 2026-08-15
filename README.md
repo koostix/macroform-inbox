@@ -1,4 +1,4 @@
-# Macroform Inbox
+# Music Projects Organizer
 
 A Mac app for musicians who dump sessions into folders and need them named, previewed, and filed — fast.
 
@@ -18,13 +18,13 @@ The original folder is **moved**, not copied.
 ## Install
 
 ```bash
-git clone https://github.com/koostix/macroform-inbox.git
-cd macroform-inbox
+git clone https://github.com/koostix/music-projects-organizer.git
+cd music-projects-organizer
 ./scripts/package-app.sh
-cp -R "dist/Macroform Inbox.app" ~/Applications/
+cp -R "dist/Music Projects Organizer.app" ~/Applications/
 ```
 
-Open **Macroform Inbox** from Applications or Spotlight. No Terminal after that.
+Open **Music Projects Organizer** from Applications or Spotlight. No Terminal after that.
 
 ## What it does
 

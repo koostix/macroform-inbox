@@ -2,21 +2,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "MacroformInbox",
+    name: "MusicProjectsOrganizer",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "MacroformInboxCore", targets: ["MacroformInboxCore"]),
-        .executable(name: "MacroformInbox", targets: ["App"]),
+        .library(name: "MusicProjectsOrganizerCore", targets: ["MusicProjectsOrganizerCore"]),
+        .executable(name: "MusicProjectsOrganizer", targets: ["App"]),
     ],
     targets: [
-        .target(name: "MacroformInboxCore"),
+        .target(name: "MusicProjectsOrganizerCore"),
         .executableTarget(
             name: "App",
-            dependencies: ["MacroformInboxCore"],
+            dependencies: ["MusicProjectsOrganizerCore"],
             path: "Sources/App",
             exclude: ["Info.plist"]
         ),
-        .testTarget(name: "MacroformInboxCoreTests", dependencies: ["MacroformInboxCore"]),
+        .testTarget(name: "MusicProjectsOrganizerCoreTests", dependencies: ["MusicProjectsOrganizerCore"]),
     ],
     swiftLanguageModes: [.v5]
 )

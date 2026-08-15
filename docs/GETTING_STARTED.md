@@ -5,15 +5,15 @@ Five minutes from a pile of unnamed audio to a named project folder.
 ## 1. Install the app
 
 ```bash
-git clone https://github.com/koostix/macroform-inbox.git
-cd macroform-inbox
+git clone https://github.com/koostix/music-projects-organizer.git
+cd music-projects-organizer
 ./scripts/package-app.sh
-cp -R "dist/Macroform Inbox.app" ~/Applications/
+cp -R "dist/Music Projects Organizer.app" ~/Applications/
 ```
 
 Needs macOS 14 or later and [Swift](https://www.swift.org/install/) (Xcode or the Swift toolchain).
 
-Open **Macroform Inbox** from Applications or Spotlight.
+Open **Music Projects Organizer** from Applications or Spotlight.
 
 ## 2. Decide what to point it at
 
@@ -91,7 +91,7 @@ Finder now has something like:
 ## Rebuild after a code change
 
 ```bash
-cd macroform-inbox
+cd music-projects-organizer
 ./scripts/package-app.sh
-cp -R "dist/Macroform Inbox.app" ~/Applications/
+cp -R "dist/Music Projects Organizer.app" ~/Applications/
 ```

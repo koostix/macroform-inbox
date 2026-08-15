@@ -1,5 +1,5 @@
 import SwiftUI
-import MacroformInboxCore
+import MusicProjectsOrganizerCore
 
 struct InboxView: View {
     @ObservedObject var viewModel: InboxViewModel
@@ -25,7 +25,7 @@ struct InboxView: View {
                     .disabled(viewModel.selectedPile == nil)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .macroformInboxReload)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .musicProjectsOrganizerReload)) { _ in
             viewModel.reload()
         }
     }
