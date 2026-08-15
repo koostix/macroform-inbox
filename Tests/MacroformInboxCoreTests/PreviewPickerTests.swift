@@ -1,0 +1,60 @@
+import XCTest
+@testable import MacroformInboxCore
+
+final class PreviewPickerTests: XCTestCase {
+    private var tempRoot: URL!
+
+    override func setUpWithError() throws {
+        tempRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MacroformInbox-preview-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempRoot, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: tempRoot)
+    }
+
+    func testPrefersMixStemOverLongerRawTake() throws {
+        try write(name: "MIXST001.WAV", size: 10)
+        try write(name: "EX000_56.WAV", size: 100)
+        XCTAssertEqual(try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent, "MIXST001.WAV")
+    }
+
+    func testPrefersBounceOverLongerRawOutsideBounces() throws {
+        try write(name: "Bounces/mix.aif", size: 20)
+        try write(name: "EX000_1.WAV", size: 200)
+        XCTAssertEqual(try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent, "mix.aif")
+    }
+
+    func testPrefersSmartTempoWhenNoMixOrBounce() throws {
+        try write(name: "Smart Tempo Multitrack Set 1.aif", size: 30)
+        try write(name: "stem.wav", size: 300)
+        XCTAssertEqual(
+            try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent,
+            "Smart Tempo Multitrack Set 1.aif"
+        )
+    }
+
+    func testFallsBackToLongestAudioFile() throws {
+        try write(name: "short.mp3", size: 5)
+        try write(name: "long.m4a", size: 50)
+        XCTAssertEqual(try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent, "long.m4a")
+    }
+
+    func testEmptyFolderReturnsNil() throws {
+        XCTAssertNil(try PreviewPicker().previewFile(in: tempRoot))
+    }
+
+    func testIgnoresHeicAndMov() throws {
+        try write(name: "photo.heic", size: 500)
+        try write(name: "clip.mov", size: 500)
+        try write(name: "take.wav", size: 8)
+        XCTAssertEqual(try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent, "take.wav")
+    }
+
+    private func write(name: String, size: Int) throws {
+        let url = tempRoot.appendingPathComponent(name)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(repeating: 0x61, count: size).write(to: url)
+    }
+}
