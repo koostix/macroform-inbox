@@ -12,6 +12,7 @@ final class InboxViewModel: ObservableObject {
     @Published var bpmText = ""
     @Published private(set) var status = "Ready"
     @Published private(set) var isFiling = false
+    let player = PreviewPlayer()
 
     let service: InboxService
 
@@ -62,16 +63,23 @@ final class InboxViewModel: ObservableObject {
     func select(_ pile: Pile) {
         selectedPileID = pile.id
         applyForm(for: pile)
+        player.load(currentPreviewURL)
     }
 
     func skip() {
         guard let selectedPile else { return }
         let skippedName = selectedPile.displayName
-        if let next = piles.first(where: { $0.id != selectedPile.id }) {
-            select(next)
-        } else {
-            selectedPileID = nil
-            clearForm()
+        player.stop()
+        if let index = piles.firstIndex(where: { $0.id == selectedPile.id }) {
+            let nextIndex = index + 1
+            if nextIndex < piles.count {
+                select(piles[nextIndex])
+            } else if index > 0 {
+                select(piles[index - 1])
+            } else {
+                selectedPileID = nil
+                clearForm()
+            }
         }
         status = "Skipped \(skippedName)."
     }
@@ -80,6 +88,7 @@ final class InboxViewModel: ObservableObject {
         guard let selectedPile, isNameValid else { return }
         isFiling = true
         defer { isFiling = false }
+        player.stop()
         do {
             let result = try service.file(selectedPile, name: proposedName)
             status = result.didMove

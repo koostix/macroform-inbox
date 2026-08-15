@@ -2,7 +2,7 @@ import SwiftUI
 import MacroformInboxCore
 
 struct InboxView: View {
-    @StateObject var viewModel: InboxViewModel
+    @ObservedObject var viewModel: InboxViewModel
 
     var body: some View {
         NavigationSplitView {
@@ -63,6 +63,20 @@ struct InboxView: View {
                     LabeledContent("Source", value: pile.sourceURL.path)
                         .font(.caption)
                     LabeledContent("Files", value: "\(pile.fileCount)")
+                    if let preview = viewModel.currentPreviewURL {
+                        PreviewControls(player: viewModel.player, filename: preview.lastPathComponent)
+                    } else {
+                        Text("No preview audio in this pile.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.muted)
+                    }
+                    if pile.sourceURL.pathExtension.lowercased() == "logicx"
+                        || FileManager.default.fileExists(atPath: pile.sourceURL.appendingPathComponent("\(pile.displayName).logicx").path)
+                        || (try? FileManager.default.contentsOfDirectory(at: pile.sourceURL, includingPropertiesForKeys: nil))?.contains(where: { $0.pathExtension.lowercased() == "logicx" }) == true {
+                        Text("Logic project in this pile — close it in Logic before filing.")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
                 }
 
                 Section("Name this project") {
@@ -108,6 +122,22 @@ struct InboxView: View {
                 systemImage: "checkmark.circle",
                 description: Text("Drop a session folder into _Music Projects/_Inbox.")
             )
+        }
+    }
+}
+
+private struct PreviewControls: View {
+    @ObservedObject var player: PreviewPlayer
+    let filename: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(player.isPlaying ? "Pause preview" : "Play preview") {
+                player.toggle()
+            }
+            Text(filename)
+                .font(.caption)
+                .foregroundStyle(Theme.muted)
         }
     }
 }
