@@ -16,6 +16,9 @@ mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$ROOT/Sources/App/Info.plist" "$CONTENTS/Info.plist"
 cp "$ROOT/.build/release/$EXEC_NAME" "$CONTENTS/MacOS/$EXEC_NAME"
 chmod +x "$CONTENTS/MacOS/$EXEC_NAME"
+if [[ -f "$ROOT/Assets/AppIcon.icns" ]]; then
+  cp "$ROOT/Assets/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
+fi
 
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"

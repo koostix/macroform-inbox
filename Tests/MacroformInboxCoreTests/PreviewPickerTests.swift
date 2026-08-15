@@ -41,6 +41,14 @@ final class PreviewPickerTests: XCTestCase {
         XCTAssertEqual(try PreviewPicker().previewFile(in: tempRoot)?.lastPathComponent, "long.m4a")
     }
 
+    func testAudioFilesListsEveryAudioFile() throws {
+        try write(name: "short.mp3", size: 5)
+        try write(name: "Bounces/mix.wav", size: 20)
+        try write(name: "photo.heic", size: 500)
+        let files = try PreviewPicker().audioFiles(in: tempRoot).map(\.lastPathComponent).sorted()
+        XCTAssertEqual(files, ["mix.wav", "short.mp3"])
+    }
+
     func testEmptyFolderReturnsNil() throws {
         XCTAssertNil(try PreviewPicker().previewFile(in: tempRoot))
     }

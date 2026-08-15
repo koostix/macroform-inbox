@@ -51,6 +51,9 @@ public struct ProjectName: Equatable, Sendable {
         oldest: Date,
         calendar: Calendar = .current
     ) -> String {
+        if let parsed = parse(displayName) {
+            return parsed.yymmdd
+        }
         let prefix = String(displayName.prefix(6))
         if prefix.range(of: #"^\d{6}$"#, options: .regularExpression) != nil,
            displayName.count == 6 || displayName.dropFirst(6).first == "_" {
@@ -58,4 +61,38 @@ public struct ProjectName: Equatable, Sendable {
         }
         return yymmdd(from: oldest, calendar: calendar)
     }
+
+    public static func parse(_ folderName: String) -> (yymmdd: String, description: String, bpm: Int?)? {
+        var value = folderName
+        if value.lowercased().hasSuffix(".logicx") {
+            value = String(value.dropLast(".logicx".count))
+        }
+        let ns = value as NSString
+        guard let match = namePattern.firstMatch(in: value, options: [], range: NSRange(location: 0, length: ns.length)),
+              match.numberOfRanges >= 3,
+              let dateRange = Range(match.range(at: 1), in: value),
+              let restRange = Range(match.range(at: 2), in: value)
+        else {
+            return nil
+        }
+
+        let yymmdd = String(value[dateRange])
+        var rest = String(value[restRange])
+        var bpm: Int?
+        if let bpmMatch = rest.range(of: #"_\d{2,3}$"#, options: .regularExpression) {
+            let digits = rest[bpmMatch].dropFirst()
+            if let parsed = Int(digits), (20...300).contains(parsed) {
+                bpm = parsed
+                rest.removeSubrange(bpmMatch)
+            }
+        }
+
+        let description = UnnamedDetector.isUnnamed(rest) ? "" : sanitize(rest)
+        return (yymmdd, description, bpm)
+    }
+
+    private static let namePattern = try! NSRegularExpression(
+        pattern: #"^(\d{6})_(.+)$"#,
+        options: []
+    )
 }

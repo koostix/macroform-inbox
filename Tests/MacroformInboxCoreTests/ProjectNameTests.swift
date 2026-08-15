@@ -52,6 +52,32 @@ final class ProjectNameTests: XCTestCase {
         )
     }
 
+    func testParseReadsDateDescriptionAndBpm() {
+        let parsed = ProjectName.parse("260323_underwater guitar_92")
+        XCTAssertEqual(parsed?.yymmdd, "260323")
+        XCTAssertEqual(parsed?.description, "underwater guitar")
+        XCTAssertEqual(parsed?.bpm, 92)
+    }
+
+    func testParseDropsUnnamedDescription() {
+        let parsed = ProjectName.parse("260320_UNNAMED-02")
+        XCTAssertEqual(parsed?.yymmdd, "260320")
+        XCTAssertEqual(parsed?.description, "")
+        XCTAssertNil(parsed?.bpm)
+    }
+
+    func testParseIgnoresLogicSuffix() {
+        let parsed = ProjectName.parse("260218_toy piano_88.logicx")
+        XCTAssertEqual(parsed?.yymmdd, "260218")
+        XCTAssertEqual(parsed?.description, "toy piano")
+        XCTAssertEqual(parsed?.bpm, 88)
+    }
+
+    func testParseReturnsNilWhenNameHasNoDatePrefix() {
+        XCTAssertNil(ProjectName.parse("Untitled 5.logicx"))
+        XCTAssertNil(ProjectName.parse("session-drop"))
+    }
+
     func testDefaultDateFallsBackToOldestWhenNameHasNoDate() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/New_York")!

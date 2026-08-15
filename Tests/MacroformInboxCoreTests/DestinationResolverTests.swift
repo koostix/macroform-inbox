@@ -64,6 +64,43 @@ final class DestinationResolverTests: XCTestCase {
         )
     }
 
+    func testFolderOriginRenamesInPlace() {
+        let dump = tempRoot.appendingPathComponent("Session1232", isDirectory: true)
+        let pile = pile(named: "Session1232", origin: .folder, parent: tempRoot)
+        let name = ProjectName(yymmdd: "260510", description: "tape looper", bpm: 92)
+        XCTAssertEqual(
+            DestinationResolver().destination(for: pile, name: name, workbench: workbench),
+            dump.deletingLastPathComponent().appendingPathComponent("260510_tape looper_92", isDirectory: true)
+        )
+    }
+
+    func testCustomParentOverridesOrigin() {
+        let inboxPile = pile(named: "session-drop", origin: .inbox, parent: workbench.inbox)
+        let custom = tempRoot.appendingPathComponent("chosen", isDirectory: true)
+        let name = ProjectName(yymmdd: "260323", description: "toy piano", bpm: 92)
+        XCTAssertEqual(
+            DestinationResolver().destination(for: inboxPile, name: name, workbench: workbench, parent: custom),
+            custom.appendingPathComponent("260323_toy piano_92", isDirectory: true)
+        )
+    }
+
+    func testLooseFilesStayInTheOpenedFolder() {
+        let pile = Pile(
+            sourceURL: tempRoot,
+            origin: .folder,
+            displayName: "2 loose files",
+            fileCount: 2,
+            oldestFileDate: Date(),
+            kind: .looseFiles,
+            isUnnamed: true
+        )
+        let name = ProjectName(yymmdd: "260510", description: "tape looper", bpm: 92)
+        XCTAssertEqual(
+            DestinationResolver().destination(for: pile, name: name, workbench: workbench),
+            tempRoot.appendingPathComponent("260510_tape looper_92", isDirectory: true)
+        )
+    }
+
     func testSourceMatchingProposedNameIsNotTreatedAsCollision() {
         let startPile = pile(named: "260323_toy piano_92", origin: .start, parent: workbench.start)
         let name = ProjectName(yymmdd: "260323", description: "toy piano", bpm: 92)

@@ -1,10 +1,6 @@
 import Foundation
 
 public struct PreviewPicker: Sendable {
-    // Duration would need AVFoundation. File size is a stable, testable stand-in
-    // for "longest" among same-format recorder dumps.
-    private static let audioExtensions: Set<String> = ["wav", "aif", "aiff", "mp3", "m4a", "caf"]
-
     public init() {}
 
     public func previewFile(in root: URL) throws -> URL? {
@@ -29,13 +25,13 @@ public struct PreviewPicker: Sendable {
         return largest(files)
     }
 
-    private func audioFiles(in root: URL) throws -> [URL] {
+    public func audioFiles(in root: URL) throws -> [URL] {
         let fm = FileManager.default
         var isDirectory: ObjCBool = false
         guard fm.fileExists(atPath: root.path, isDirectory: &isDirectory) else { return [] }
 
         if !isDirectory.boolValue {
-            return isAudio(root) ? [root] : []
+            return MediaTypes.isAudio(root) ? [root] : []
         }
 
         var results: [URL] = []
@@ -46,15 +42,11 @@ public struct PreviewPicker: Sendable {
         ) {
             for case let fileURL as URL in enumerator {
                 let values = try fileURL.resourceValues(forKeys: [.isRegularFileKey])
-                guard values.isRegularFile == true, isAudio(fileURL) else { continue }
+                    guard values.isRegularFile == true, MediaTypes.isAudio(fileURL) else { continue }
                 results.append(fileURL)
             }
         }
         return results
-    }
-
-    private func isAudio(_ url: URL) -> Bool {
-        Self.audioExtensions.contains(url.pathExtension.lowercased())
     }
 
     private func isInsideBounces(_ url: URL, root: URL) -> Bool {

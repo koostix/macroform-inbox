@@ -3,15 +3,19 @@ import Foundation
 public struct DestinationResolver: Sendable {
     public init() {}
 
-    public func destination(for pile: Pile, name: ProjectName, workbench: Workbench) -> URL {
+    public func destination(for pile: Pile, name: ProjectName, workbench: Workbench, parent override: URL? = nil) -> URL {
         let parent: URL
-        switch pile.origin {
-        case .start:
-            parent = pile.sourceURL.deletingLastPathComponent()
-        case .revise:
-            parent = pile.sourceURL.deletingLastPathComponent()
-        case .inbox, .logic:
-            parent = workbench.start
+        if let override {
+            parent = override
+        } else if pile.kind == .looseFiles {
+            parent = pile.sourceURL
+        } else {
+            switch pile.origin {
+            case .start, .revise, .folder:
+                parent = pile.sourceURL.deletingLastPathComponent()
+            case .inbox, .logic:
+                parent = workbench.start
+            }
         }
 
         let base = name.folderName

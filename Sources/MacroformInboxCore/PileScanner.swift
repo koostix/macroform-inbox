@@ -40,54 +40,20 @@ public struct PileScanner: Sendable {
             if logicPackagesOnly && url.pathExtension.lowercased() != "logicx" { continue }
             if unnamedOnly && !UnnamedDetector.isUnnamed(url.lastPathComponent) { continue }
 
-            let stats = try fileStats(at: url)
+            let stats = try FileStats.collect(at: url)
+            let kind: PileKind = MediaTypes.isLogicPackage(url) ? .logicPackage : .folder
             piles.append(
                 Pile(
                     sourceURL: url,
                     origin: origin,
                     displayName: url.lastPathComponent,
                     fileCount: stats.count,
-                    oldestFileDate: stats.oldest
+                    oldestFileDate: stats.oldest,
+                    kind: kind,
+                    byteSize: stats.bytes
                 )
             )
         }
         return piles
-    }
-
-    private func fileStats(at root: URL) throws -> (count: Int, oldest: Date) {
-        let fm = FileManager.default
-        var isDirectory: ObjCBool = false
-        guard fm.fileExists(atPath: root.path, isDirectory: &isDirectory) else {
-            return (0, Date())
-        }
-
-        if !isDirectory.boolValue {
-            let values = try root.resourceValues(forKeys: [.contentModificationDateKey])
-            return (1, values.contentModificationDate ?? Date())
-        }
-
-        var count = 0
-        var oldest: Date?
-        if let enumerator = fm.enumerator(
-            at: root,
-            includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey],
-            options: [.skipsHiddenFiles]
-        ) {
-            for case let fileURL as URL in enumerator {
-                if fileURL.lastPathComponent == ".DS_Store" { continue }
-                let values = try fileURL.resourceValues(forKeys: [.isRegularFileKey, .contentModificationDateKey])
-                guard values.isRegularFile == true else { continue }
-                count += 1
-                if let date = values.contentModificationDate {
-                    oldest = min(oldest ?? date, date)
-                }
-            }
-        }
-
-        if let oldest {
-            return (count, oldest)
-        }
-        let folderValues = try root.resourceValues(forKeys: [.contentModificationDateKey])
-        return (count, folderValues.contentModificationDate ?? Date())
     }
 }

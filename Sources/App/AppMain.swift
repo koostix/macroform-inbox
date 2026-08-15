@@ -15,9 +15,18 @@ struct MacroformInboxApp: App {
         }
         .commands {
             CommandGroup(after: .newItem) {
+                Button("Open Folder…") { viewModel.openFolder() }
+                    .keyboardShortcut("o", modifiers: [.command])
+
+                Button("Use Inbox") { viewModel.useInbox() }
+                    .keyboardShortcut("i", modifiers: [.command, .shift])
+                    .disabled(viewModel.isWorkbenchMode)
+
+                Divider()
+
                 Button("File It") { viewModel.fileSelected() }
                     .keyboardShortcut(.return, modifiers: [.command])
-                    .disabled(!viewModel.isNameValid || viewModel.isFiling)
+                    .disabled(!viewModel.canFile)
 
                 Button("Skip") { viewModel.skip() }
                     .keyboardShortcut(".", modifiers: [.command])
@@ -27,7 +36,11 @@ struct MacroformInboxApp: App {
 
                 Button("Play/Pause Preview") { viewModel.player.toggle() }
                     .keyboardShortcut(.space, modifiers: [])
-                    .disabled(viewModel.currentPreviewURL == nil)
+                    .disabled(viewModel.selectedPreviewURL == nil)
+
+                Button("Tap Tempo") { viewModel.tapBeat() }
+                    .keyboardShortcut("t", modifiers: [.command])
+                    .disabled(viewModel.selectedPile == nil)
 
                 Divider()
 
@@ -35,10 +48,13 @@ struct MacroformInboxApp: App {
                     .keyboardShortcut("r", modifiers: [.command])
                     .disabled(viewModel.selectedPile == nil)
 
+                Button("Reveal Current Folder") { viewModel.revealCurrentFolder() }
+                    .keyboardShortcut("r", modifiers: [.command, .option])
+
                 Button("Reveal _Start in Finder") { viewModel.revealStart() }
                     .keyboardShortcut("r", modifiers: [.command, .shift])
 
-                Button("Reload Inbox") { viewModel.reload() }
+                Button("Reload") { viewModel.reload() }
                     .keyboardShortcut("l", modifiers: [.command])
             }
         }

@@ -1,61 +1,93 @@
 # Macroform Inbox
 
-Name a dump. File it. Two minutes.
+A Mac app for musicians who dump sessions into folders and need them named, previewed, and filed — fast.
 
-This is the processor for unnamed piles — recorder dumps (`EX000_*.WAV`), Logic `Untitled` projects, and anything dropped on `_Inbox`. It does **not** replace `_Music Projects`. It feeds `_Start`.
-
-## Daily use
-
-1. Drop a session folder (or an SD-card dump folder) into:
-
-   `~/Desktop/_Music Projects/_Inbox`
-
-2. Open **Macroform Inbox** from Applications (or Spotlight). No Terminal needed.
-
-3. Listen to the likely mix. Type a description and a BPM (20–300). Hit Return.
-
-4. Finder now has:
-
-   `~/Desktop/_Music Projects/_Start/YYMMDD_description_BPM/`
-
-   The original dump is **moved**, not copied.
-
-Unnamed folders already sitting in `_Start` or `2_Revise` show up automatically. Logic `Untitled*.logicx` packages in `~/Music/Logic` do too. Those already in `_Start` / `2_Revise` are **renamed in place**. Inbox and Logic dumps move into `_Start`.
-
-To rebuild the double-clickable app after a code change:
-
-```bash
-cd ~/Desktop/MacroformInbox
-./scripts/package-app.sh
-cp -R "dist/Macroform Inbox.app" ~/Applications/
-```
-
-## Keys
-
-| Key | Action |
-|---|---|
-| Space | Play / pause the preview |
-| Return | File it (when the name is valid) |
-| ⌘↩ | File it |
-| ⌘. | Skip this pile |
-| ⌘R | Reveal the pile in Finder |
-| ⇧⌘R | Reveal `_Start` |
-| ⌘L | Reload the queue |
-
-## Naming
+Point it at a recorder dump, a Logic `Untitled` project, an SD card, or a whole library. Inspect the files, hear the likely mix, tap a tempo, and file it as:
 
 ```
 YYMMDD_description_BPM
 260323_underwater guitar_92
 ```
 
-Date defaults to the date already on the folder, or the oldest file in the pile. Spaces in the description are fine. BPM is required.
+The original folder is **moved**, not copied.
 
-## What it will not do (yet)
+**macOS 14+ · Apple Silicon / Intel**
 
-- Copy across volumes (SD card → laptop). Same volume only.
-- Split one dump into several songs.
-- Touch named project folders.
-- Talk to DistroKid, Bandcamp, or the external drive.
+[Getting started](docs/GETTING_STARTED.md) · [Keys](#keys) · [Build](#build-from-source)
 
-Close a Logic project before filing it if the pile contains a `.logicx`.
+## Install
+
+```bash
+git clone https://github.com/koostix/macroform-inbox.git
+cd macroform-inbox
+./scripts/package-app.sh
+cp -R "dist/Macroform Inbox.app" ~/Applications/
+```
+
+Open **Macroform Inbox** from Applications or Spotlight. No Terminal after that.
+
+## What it does
+
+- Opens your inbox, or **any folder** (`⌘O`)
+- Lists dumps, named projects, Logic packages, and leftover loose files
+- Click a file to preview it on a scrubbable waveform
+- Tap tempo (`⌘T`) when the session never wrote a BPM
+- Renames in place, moves to `_Start`, or files into a folder you choose
+- Wraps loose audio into a new named project folder
+
+It does not replace your library. It feeds the start of one.
+
+## Suggested library
+
+A simple layout that works well with Inbox mode:
+
+```
+~/Desktop/_Music Projects/
+  _Inbox/     ← drop unnamed dumps here
+  _Start/     ← filed projects land here
+  2_Revise/   ← unnamed folders here are offered for rename
+```
+
+Inbox mode also watches `~/Music/Logic` for `Untitled*.logicx`.
+
+Any other folder works. Open it and organize what is there.
+
+## Keys
+
+| Key | Action |
+|---|---|
+| Space | Play / pause |
+| Return | File it |
+| ⌘T | Tap tempo |
+| ⌘O | Open any folder |
+| ⇧⌘I | Back to Inbox |
+| ⌘↩ | File it |
+| ⌘. | Skip |
+| ⌘R | Reveal the pile |
+| ⌥⌘R | Reveal the opened folder |
+| ⇧⌘R | Reveal `_Start` |
+| ⌘L | Reload |
+
+## Build from source
+
+```bash
+swift test
+./scripts/package-app.sh
+```
+
+To regenerate the app icon:
+
+```bash
+python3 scripts/generate-icon.py
+iconutil -c icns Assets/AppIcon.iconset -o Assets/AppIcon.icns
+```
+
+## Limits
+
+- Same volume only. No SD-card → laptop copy yet.
+- Does not split one dump into several songs.
+- Close Logic before filing a pile that contains a `.logicx`.
+
+## License
+
+Personal / studio tool. Use and adapt as you like.
