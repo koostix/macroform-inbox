@@ -91,6 +91,18 @@ final class InboxViewModel: ObservableObject {
         isNameValid && !isFiling && (destination != .custom || customDestination != nil)
     }
 
+    var canAutoRename: Bool {
+        if descriptionText.contains(where: \.isWhitespace) { return true }
+        guard let selectedPile, !selectedPile.isUnnamed, selectedPile.kind != .looseFiles else {
+            return false
+        }
+        return ProjectName.removingSpaces(from: selectedPile.displayName) != nil
+    }
+
+    var autoRenamePreview: String? {
+        selectedPile.flatMap { ProjectName.removingSpaces(from: $0.displayName) }
+    }
+
     func reload() {
         do {
             if isWorkbenchMode {
@@ -165,6 +177,37 @@ final class InboxViewModel: ObservableObject {
         }
     }
 
+    func autoRenameSelected() {
+        guard canAutoRename else { return }
+        if descriptionText.contains(where: \.isWhitespace) {
+            descriptionText = ProjectName.pascalCaseWords(descriptionText)
+        }
+        guard let selectedPile,
+              !selectedPile.isUnnamed,
+              selectedPile.kind != .looseFiles,
+              ProjectName.removingSpaces(from: selectedPile.displayName) != nil
+        else {
+            status = "Description → \(descriptionText)"
+            return
+        }
+        isFiling = true
+        defer { isFiling = false }
+        player.stop()
+        do {
+            let result = try service.autoRename(selectedPile)
+            status = result.didMove
+                ? "Renamed → \(result.destination.lastPathComponent)"
+                : "Already named."
+            if scanRoot?.standardizedFileURL == selectedPile.sourceURL.standardizedFileURL {
+                open(result.destination.deletingLastPathComponent(), persist: true)
+                return
+            }
+            reloadKeepingStatus()
+        } catch {
+            status = error.localizedDescription
+        }
+    }
+
     func choosePreview(_ url: URL) {
         if selectedPreviewURL?.standardizedFileURL == url.standardizedFileURL {
             player.toggle()
@@ -231,16 +274,33 @@ final class InboxViewModel: ObservableObject {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
-        panel.directoryURL = customDestination ?? scanRoot ?? service.workbench.start
+        panel.title = "Choose destination folder"
+        panel.message = "Filed projects will move into this folder."
         panel.prompt = "Use"
-        guard panel.runModal() == .OK, let url = panel.url else {
-            if customDestination == nil {
-                destination = defaultDestination(for: selectedPile)
+        panel.directoryURL = customDestination ?? scanRoot ?? service.workbench.start
+
+        let finish: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            Task { @MainActor in
+                guard let self else { return }
+                guard response == .OK, let url = panel.url else {
+                    if self.customDestination == nil {
+                        self.destination = self.defaultDestination(for: self.selectedPile)
+                    }
+                    return
+                }
+                self.customDestination = url
+                self.destination = .custom
+                self.status = "Destination → \(url.path)"
             }
-            return
         }
-        customDestination = url
-        destination = .custom
+
+        DispatchQueue.main.async {
+            if let window = NSApp.keyWindow ?? NSApp.windows.first(where: \.isVisible) {
+                panel.beginSheetModal(for: window, completionHandler: finish)
+            } else {
+                finish(panel.runModal())
+            }
+        }
     }
 
     func revealSelected() {

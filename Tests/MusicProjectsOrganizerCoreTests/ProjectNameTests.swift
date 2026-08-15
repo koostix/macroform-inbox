@@ -37,6 +37,24 @@ final class ProjectNameTests: XCTestCase {
         XCTAssertTrue(ProjectName(yymmdd: "260323", description: "toy", bpm: 0).isValid)
     }
 
+    func testRemovingSpacesFromTitledFolder() {
+        XCTAssertEqual(ProjectName.pascalCaseWords("underwater guitar"), "UnderwaterGuitar")
+        XCTAssertEqual(
+            ProjectName.removingSpaces(from: "260323_underwater guitar_92"),
+            "260323_UnderwaterGuitar_92"
+        )
+        XCTAssertEqual(
+            ProjectName.removingSpaces(from: "20250828 Session - MaryLuFlute-Mix"),
+            "20250828Session-MaryLuFlute-Mix"
+        )
+        XCTAssertEqual(
+            ProjectName.removingSpaces(from: "Chill Song.logicx"),
+            "ChillSong.logicx"
+        )
+        XCTAssertNil(ProjectName.removingSpaces(from: "260323_toypiano_92"))
+        XCTAssertNil(ProjectName.removingSpaces(from: "   "))
+    }
+
     func testZeroBpmRendersAs000() {
         let name = ProjectName(yymmdd: "260323", description: "drone wash", bpm: 0)
         XCTAssertEqual(name.folderName, "260323_drone wash_000")

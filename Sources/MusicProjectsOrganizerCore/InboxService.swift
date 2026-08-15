@@ -70,12 +70,29 @@ public struct InboxService {
         }
         return try mover.move(from: pile.sourceURL, to: destination)
     }
+
+    public func autoRename(_ pile: Pile) throws -> MoveResult {
+        guard !pile.isUnnamed, pile.kind != .looseFiles else {
+            throw InboxServiceError.cannotAutoRename
+        }
+        guard let folderName = ProjectName.removingSpaces(from: pile.displayName) else {
+            throw InboxServiceError.cannotAutoRename
+        }
+        let destination = resolver.inPlaceDestination(for: pile, folderName: folderName)
+        return try mover.move(from: pile.sourceURL, to: destination)
+    }
 }
 
 public enum InboxServiceError: Error, Equatable, LocalizedError {
     case invalidProjectName
+    case cannotAutoRename
 
     public var errorDescription: String? {
-        "Enter a description, a six-digit date, and a BPM from 20 to 300 — or 000 if there is no tempo."
+        switch self {
+        case .invalidProjectName:
+            return "Enter a description, a six-digit date, and a BPM from 20 to 300 — or 000 if there is no tempo."
+        case .cannotAutoRename:
+            return "Auto rename only works on a titled folder that still has spaces."
+        }
     }
 }

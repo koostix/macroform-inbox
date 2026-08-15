@@ -88,6 +88,42 @@ final class InboxServiceTests: XCTestCase {
         XCTAssertEqual(result.destination.lastPathComponent, "260510_orphan take_100")
     }
 
+    func testAutoRenameStripsSpacesFromATitledFolder() throws {
+        let titled = workbench.start.appendingPathComponent("260323_underwater guitar_92", isDirectory: true)
+        try writeFile(at: titled.appendingPathComponent("mix.wav"), contents: Data("a".utf8))
+        let service = InboxService(workbench: workbench)
+        let pile = Pile(
+            sourceURL: titled,
+            origin: .start,
+            displayName: "260323_underwater guitar_92",
+            fileCount: 1,
+            oldestFileDate: Date(),
+            isUnnamed: false
+        )
+
+        let result = try service.autoRename(pile)
+
+        XCTAssertTrue(result.didMove)
+        XCTAssertEqual(result.destination.lastPathComponent, "260323_UnderwaterGuitar_92")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: result.destination.appendingPathComponent("mix.wav").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: titled.path))
+    }
+
+    func testAutoRenameRefusesUnnamedFolders() throws {
+        let pile = Pile(
+            sourceURL: workbench.start.appendingPathComponent("Untitled", isDirectory: true),
+            origin: .start,
+            displayName: "Untitled",
+            fileCount: 0,
+            oldestFileDate: Date()
+        )
+        XCTAssertThrowsError(try InboxService(workbench: workbench).autoRename(pile)) { error in
+            guard case InboxServiceError.cannotAutoRename = error else {
+                return XCTFail("expected cannotAutoRename, got \(error)")
+            }
+        }
+    }
+
     func testEnsureInboxCreatesTheDropFolder() throws {
         try FileManager.default.removeItem(at: workbench.inbox)
         let service = InboxService(workbench: workbench)

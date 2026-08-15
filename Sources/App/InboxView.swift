@@ -168,17 +168,19 @@ struct InboxView: View {
                 Section("Name this project") {
                     TextField("Date (YYMMDD)", text: $viewModel.dateText)
                         .textFieldStyle(.roundedBorder)
-                    TextField("Description", text: $viewModel.descriptionText)
-                        .textFieldStyle(.roundedBorder)
                     HStack(alignment: .center, spacing: 8) {
-                        TextField("BPM or 000", text: $viewModel.bpmText)
+                        TextField("Description", text: $viewModel.descriptionText)
                             .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 140)
-                        Button(viewModel.tapCount > 0 ? "Tap (\(viewModel.tapCount))" : "Tap") {
-                            viewModel.tapBeat()
-                        }
-                        .help("Space: tap a quarter note. Leave 000 if there is no tempo. Click a file to play.")
+                        Button("Auto rename") { viewModel.autoRenameSelected() }
+                            .disabled(!viewModel.canAutoRename || viewModel.isFiling)
+                            .help("Remove spaces and capitalize each word, like UnderwaterGuitar.")
                     }
+                    TextField("BPM or 000", text: $viewModel.bpmText)
+                        .textFieldStyle(.roundedBorder)
+                    Button(viewModel.tapCount > 0 ? "Tap (\(viewModel.tapCount))" : "Tap") {
+                        viewModel.tapBeat()
+                    }
+                    .help("Space: tap a quarter note. Leave 000 if there is no tempo. Click a file to play.")
 
                     if !viewModel.proposedFolderName.isEmpty {
                         LabeledContent("Folder", value: viewModel.proposedFolderName)
@@ -194,25 +196,22 @@ struct InboxView: View {
 
                 Section("Organize") {
                     Picker("Destination", selection: $viewModel.destination) {
-                        ForEach(FileDestination.allCases) { option in
-                            Text(option.title).tag(option)
+                        Text(FileDestination.inPlace.title).tag(FileDestination.inPlace)
+                        Text(FileDestination.start.title).tag(FileDestination.start)
+                        if viewModel.customDestination != nil {
+                            Text(viewModel.customDestination?.lastPathComponent ?? "Other")
+                                .tag(FileDestination.custom)
                         }
                     }
                     .pickerStyle(.segmented)
-                    .onChange(of: viewModel.destination) { _, newValue in
-                        if newValue == .custom && viewModel.customDestination == nil {
-                            viewModel.chooseCustomDestination()
-                        }
+                    Button("Choose folder…") {
+                        viewModel.chooseCustomDestination()
                     }
-                    if viewModel.destination == .custom {
-                        HStack {
-                            Text(viewModel.customDestination?.path ?? "No folder chosen")
-                                .font(.caption)
-                                .foregroundStyle(Theme.muted)
-                                .lineLimit(2)
-                            Spacer()
-                            Button("Change…") { viewModel.chooseCustomDestination() }
-                        }
+                    if viewModel.destination == .custom, let folder = viewModel.customDestination {
+                        Text(folder.path)
+                            .font(.caption)
+                            .foregroundStyle(Theme.muted)
+                            .textSelection(.enabled)
                     }
                     if pile.kind == .looseFiles {
                         Text("Loose files will be wrapped into the new folder. Subfolders stay put.")

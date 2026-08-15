@@ -33,6 +33,35 @@ public struct ProjectName: Equatable, Sendable {
         bpm == 0 || (20...300).contains(bpm)
     }
 
+    public static func pascalCaseWords(_ raw: String) -> String {
+        raw.split(whereSeparator: \.isWhitespace).map { word in
+            let value = String(word)
+            guard let first = value.first else { return value }
+            return String(first).uppercased() + value.dropFirst()
+        }.joined()
+    }
+
+    public static func removingSpaces(from displayName: String) -> String? {
+        let logicSuffix = ".logicx"
+        let hasLogic = displayName.lowercased().hasSuffix(logicSuffix)
+        let stem = hasLogic ? String(displayName.dropLast(logicSuffix.count)) : displayName
+        guard stem.contains(where: \.isWhitespace) else { return nil }
+
+        let rebuilt: String
+        if let parsed = parse(stem), !parsed.description.isEmpty {
+            let description = pascalCaseWords(parsed.description)
+            if let bpm = parsed.bpm {
+                rebuilt = "\(parsed.yymmdd)_\(description)_\(bpm == 0 ? "000" : String(bpm))"
+            } else {
+                rebuilt = "\(parsed.yymmdd)_\(description)"
+            }
+        } else {
+            rebuilt = pascalCaseWords(stem)
+        }
+        guard !rebuilt.isEmpty, rebuilt != stem else { return nil }
+        return hasLogic ? rebuilt + String(displayName.suffix(logicSuffix.count)) : rebuilt
+    }
+
     public static func sanitize(_ raw: String) -> String {
         let stripped = raw
             .replacingOccurrences(of: "/", with: " ")

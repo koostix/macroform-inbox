@@ -18,10 +18,20 @@ public struct DestinationResolver: Sendable {
             }
         }
 
-        let base = name.folderName
+        return uniqued(name.folderName, in: parent, otherThan: pile.sourceURL)
+    }
+
+    public func inPlaceDestination(for pile: Pile, folderName: String) -> URL {
+        let parent = pile.kind == .looseFiles
+            ? pile.sourceURL
+            : pile.sourceURL.deletingLastPathComponent()
+        return uniqued(folderName, in: parent, otherThan: pile.sourceURL)
+    }
+
+    private func uniqued(_ base: String, in parent: URL, otherThan source: URL) -> URL {
         var candidate = parent.appendingPathComponent(base, isDirectory: true)
         var suffix = 2
-        while destinationExists(candidate, otherThan: pile.sourceURL) {
+        while destinationExists(candidate, otherThan: source) {
             candidate = parent.appendingPathComponent("\(base)-\(suffix)", isDirectory: true)
             suffix += 1
         }
