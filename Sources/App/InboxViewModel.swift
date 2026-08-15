@@ -3,6 +3,42 @@ import Foundation
 import MusicProjectsOrganizerCore
 import SwiftUI
 
+enum NavFocus {
+    case piles
+    case files
+}
+
+struct ContentItem: Identifiable, Hashable {
+    var id: URL { url }
+    var url: URL
+    var name: String
+    var kindLabel: String
+    var fileSize: Int64
+    var isAudio: Bool
+    var isDirectory: Bool
+    var isImage: Bool
+
+    init(url: URL, name: String, kindLabel: String, fileSize: Int64, isAudio: Bool, isDirectory: Bool, isImage: Bool) {
+        self.url = url
+        self.name = name
+        self.kindLabel = kindLabel
+        self.fileSize = fileSize
+        self.isAudio = isAudio
+        self.isDirectory = isDirectory
+        self.isImage = isImage
+    }
+
+    init(_ entry: InventoryEntry) {
+        url = entry.url
+        name = entry.name
+        kindLabel = entry.kindLabel
+        fileSize = entry.fileSize
+        isAudio = entry.isAudio
+        isDirectory = entry.isDirectory
+        isImage = entry.isImage
+    }
+}
+
 enum FileDestination: String, CaseIterable, Identifiable {
     case inPlace
     case start
@@ -32,7 +68,11 @@ final class InboxViewModel: ObservableObject {
     @Published private(set) var scanRoot: URL?
     @Published private(set) var inventory: FolderInventory?
     @Published private(set) var audioFiles: [URL] = []
+    @Published private(set) var contentItems: [ContentItem] = []
+    @Published private(set) var coverURL: URL?
     @Published var selectedPreviewURL: URL?
+    @Published var selectedContentID: URL?
+    @Published var navFocus: NavFocus = .piles
     @Published private(set) var status = "Ready"
     @Published private(set) var isFiling = false
     @Published private(set) var tapCount = 0
@@ -41,6 +81,7 @@ final class InboxViewModel: ObservableObject {
     let service: InboxService
     private let scanRootKey = "musicprojects.scanRoot"
     private var tapTempo = TapTempo()
+    private var keyMonitor: Any?
 
     init(service: InboxService = InboxService(workbench: .live())) {
         self.service = service
@@ -49,6 +90,7 @@ final class InboxViewModel: ObservableObject {
            FileManager.default.fileExists(atPath: path) {
             scanRoot = URL(fileURLWithPath: path, isDirectory: true)
         }
+        startKeyMonitor()
         reload()
     }
 
@@ -118,7 +160,10 @@ final class InboxViewModel: ObservableObject {
                 clearForm()
                 inventory = nil
                 audioFiles = []
+                contentItems = []
+                coverURL = nil
                 selectedPreviewURL = nil
+                selectedContentID = nil
                 player.stop()
             }
             status = piles.isEmpty ? emptyStatus : "Ready"
@@ -129,6 +174,7 @@ final class InboxViewModel: ObservableObject {
 
     func select(_ pile: Pile) {
         selectedPileID = pile.id
+        navFocus = .piles
         resetTapTempo()
         applyForm(for: pile)
         destination = defaultDestination(for: pile)
@@ -150,6 +196,9 @@ final class InboxViewModel: ObservableObject {
                 clearForm()
                 inventory = nil
                 audioFiles = []
+                contentItems = []
+                coverURL = nil
+                selectedContentID = nil
             }
         }
         status = "Skipped \(skippedName)."
@@ -209,13 +258,93 @@ final class InboxViewModel: ObservableObject {
     }
 
     func choosePreview(_ url: URL) {
+        navFocus = .files
+        selectedContentID = url
         if selectedPreviewURL?.standardizedFileURL == url.standardizedFileURL {
             player.toggle()
             return
         }
+        selectPreview(url)
+    }
+
+    func selectContent(_ url: URL) {
+        navFocus = .files
+        selectedContentID = url
+        if contentItems.first(where: { $0.url == url })?.isAudio == true {
+            if selectedPreviewURL?.standardizedFileURL == url.standardizedFileURL {
+                player.toggle()
+            } else {
+                selectPreview(url)
+            }
+        }
+    }
+
+    func selectAdjacentPile(offset: Int) {
+        let piles = visiblePiles
+        guard !piles.isEmpty else { return }
+        let current = selectedPile.flatMap { selected in
+            piles.firstIndex { $0.id == selected.id }
+        } ?? 0
+        let index = min(max(current + offset, 0), piles.count - 1)
+        guard index != current else { return }
+        select(piles[index])
+    }
+
+    func selectAdjacentContent(offset: Int) {
+        let items = contentItems
+        guard !items.isEmpty else { return }
+        let current = selectedContentID.flatMap { url in
+            items.firstIndex { $0.url.standardizedFileURL == url.standardizedFileURL }
+        } ?? 0
+        let index = min(max(current + offset, 0), items.count - 1)
+        let item = items[index]
+        selectedContentID = item.url
+        if item.isAudio {
+            selectPreview(item.url)
+        }
+    }
+
+    func selectAdjacentPreview(offset: Int) {
+        selectAdjacentContent(offset: offset)
+    }
+
+    private func selectPreview(_ url: URL) {
         selectedPreviewURL = url
+        selectedContentID = url
         player.load(url)
         player.play()
+    }
+
+    private func startKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            if NSApp.keyWindow?.firstResponder is NSTextView {
+                return event
+            }
+            switch event.keyCode {
+            case 126:
+                Task { @MainActor in
+                    if self.navFocus == .files {
+                        self.selectAdjacentContent(offset: -1)
+                    } else {
+                        self.selectAdjacentPile(offset: -1)
+                    }
+                }
+                return nil
+            case 125:
+                Task { @MainActor in
+                    if self.navFocus == .files {
+                        self.selectAdjacentContent(offset: 1)
+                    } else {
+                        self.selectAdjacentPile(offset: 1)
+                    }
+                }
+                return nil
+            default:
+                return event
+            }
+        }
     }
 
     func tapBeat() {
@@ -347,9 +476,31 @@ final class InboxViewModel: ObservableObject {
     private func loadInspection(for pile: Pile) {
         inventory = try? service.inspect(pile)
         audioFiles = (try? service.audioFiles(in: pile)) ?? []
+        coverURL = try? service.coverURL(for: pile)
+        rebuildContentItems()
         let preview = (try? service.previewURL(for: pile)) ?? audioFiles.first
         selectedPreviewURL = preview
+        selectedContentID = preview ?? contentItems.first?.url
         player.load(preview)
+    }
+
+    private func rebuildContentItems() {
+        var rows = (inventory?.entries ?? []).map(ContentItem.init)
+        let listed = Set(rows.map { $0.url.standardizedFileURL })
+        for url in audioFiles where !listed.contains(url.standardizedFileURL) {
+            rows.append(
+                ContentItem(
+                    url: url,
+                    name: url.lastPathComponent,
+                    kindLabel: url.pathExtension.lowercased(),
+                    fileSize: 0,
+                    isAudio: true,
+                    isDirectory: false,
+                    isImage: false
+                )
+            )
+        }
+        contentItems = rows
     }
 
     private func reloadKeepingStatus() {

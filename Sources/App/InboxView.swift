@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import MusicProjectsOrganizerCore
 
@@ -17,12 +18,9 @@ struct InboxView: View {
         .preferredColorScheme(.dark)
         .toolbar {
             ToolbarItemGroup {
-                Button("Open…", systemImage: "folder.badge.plus") { viewModel.openFolder() }
-                Button("Inbox", systemImage: "tray") { viewModel.useInbox() }
-                    .disabled(viewModel.isWorkbenchMode)
-                Button("Reload", systemImage: "arrow.clockwise") { viewModel.reload() }
-                Button("Reveal", systemImage: "folder") { viewModel.revealSelected() }
+                Button("Reveal pile", systemImage: "folder") { viewModel.revealSelected() }
                     .disabled(viewModel.selectedPile == nil)
+                    .help("Reveal the selected pile in Finder")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .musicProjectsOrganizerReload)) { _ in
@@ -32,7 +30,48 @@ struct InboxView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Spacer(minLength: 0)
+                    HStack(spacing: 18) {
+                        Button {
+                            viewModel.reload()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Reload this folder")
+
+                        Button {
+                            viewModel.openFolder()
+                        } label: {
+                            Image(systemName: "folder.badge.plus")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Choose a source folder to inspect")
+
+                        Button {
+                            viewModel.revealCurrentFolder()
+                        } label: {
+                            Image(systemName: "folder")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Reveal the source folder in Finder")
+
+                        Button {
+                            viewModel.useInbox()
+                        } label: {
+                            Image(systemName: "tray")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(viewModel.isWorkbenchMode)
+                        .help(viewModel.isWorkbenchMode ? "Already in Inbox" : "Back to Inbox")
+                    }
+                    .font(.title2)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity)
+
                 HStack {
                     Text(viewModel.locationTitle.uppercased())
                         .font(.caption.weight(.bold))
@@ -41,15 +80,18 @@ struct InboxView: View {
                     Text("\(viewModel.visiblePiles.count)")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(Theme.muted)
+                        .help("Number of piles in this folder")
                 }
                 Text(viewModel.locationPath)
                     .font(.caption2)
                     .foregroundStyle(Theme.muted)
                     .lineLimit(2)
+                    .help(viewModel.locationPath)
                 Toggle("Unnamed only", isOn: $viewModel.showUnnamedOnly)
                     .font(.caption)
                     .toggleStyle(.switch)
                     .controlSize(.mini)
+                    .help("Show only unnamed dumps")
                     .onChange(of: viewModel.showUnnamedOnly) { _, _ in
                         if let selected = viewModel.selectedPile,
                            viewModel.visiblePiles.contains(where: { $0.id == selected.id }) {
@@ -83,6 +125,7 @@ struct InboxView: View {
             }
             .listStyle(.sidebar)
             .onChange(of: viewModel.selectedPileID) { _, newID in
+                viewModel.navFocus = .piles
                 if let pile = viewModel.piles.first(where: { $0.id == newID }) {
                     viewModel.select(pile)
                 }
@@ -100,19 +143,40 @@ struct InboxView: View {
                     LabeledContent("Kind", value: kindLabel(pile))
                     LabeledContent("Contents", value: contentsLabel(pile))
 
-                    if !contentRows.isEmpty {
+                    if let cover = viewModel.coverURL {
+                        HStack(alignment: .bottom, spacing: 12) {
+                            CoverPreview(url: cover)
+                                .onTapGesture { viewModel.revealItem(cover) }
+                                .help("Reveal cover in Finder")
+                            Text(cover.lastPathComponent)
+                                .font(.caption)
+                                .foregroundStyle(Theme.muted)
+                                .lineLimit(2)
+                        }
+                    }
+
+                    if viewModel.inventory?.hasLogicProject == true || pile.kind == .logicPackage {
+                        Text("Logic project in this pile — close it in Logic before filing.")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+
+                if !viewModel.contentItems.isEmpty {
+                    Section("Files") {
                         ScrollView {
-                            VStack(alignment: .leading, spacing: 2) {
-                                ForEach(contentRows) { row in
+                            LazyVStack(alignment: .leading, spacing: 1) {
+                                ForEach(viewModel.contentItems) { row in
                                     Button {
                                         if row.isAudio {
                                             viewModel.choosePreview(row.url)
                                         } else {
+                                            viewModel.selectContent(row.url)
                                             viewModel.revealItem(row.url)
                                         }
                                     } label: {
                                         HStack(spacing: 8) {
-                                            Image(systemName: row.isAudio ? "waveform" : (row.isDirectory ? "folder" : "doc"))
+                                            Image(systemName: row.isAudio ? "waveform" : (row.isImage ? "photo" : (row.isDirectory ? "folder" : "doc")))
                                                 .frame(width: 12)
                                             Text(row.name)
                                                 .lineLimit(1)
@@ -124,12 +188,12 @@ struct InboxView: View {
                                             }
                                         }
                                         .font(.caption)
-                                        .foregroundStyle(isSelectedPreview(row.url) ? Theme.accent : Theme.muted)
+                                        .foregroundStyle(isSelectedContent(row.url) ? Theme.accent : Theme.muted)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.vertical, 3)
-                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 6)
                                         .background(
-                                            isSelectedPreview(row.url)
+                                            isSelectedContent(row.url)
                                                 ? Theme.accent.opacity(0.12)
                                                 : Color.clear,
                                             in: RoundedRectangle(cornerRadius: 4)
@@ -139,29 +203,28 @@ struct InboxView: View {
                                     .buttonStyle(.plain)
                                 }
                             }
+                            .padding(.vertical, 2)
                         }
-                        .frame(maxHeight: 220)
+                        .scrollIndicators(.visible)
+                        .frame(height: fileListHeight)
+                        .background(Color.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 6))
                     }
+                }
 
+                Section("Preview") {
                     if viewModel.selectedPreviewURL != nil {
                         PreviewControls(
                             player: viewModel.player,
                             filename: viewModel.selectedPreviewURL?.lastPathComponent ?? ""
                         )
-                    } else if contentRows.contains(where: \.isAudio) {
-                        Text("Click a file to preview it.")
+                    } else if viewModel.contentItems.contains(where: \.isAudio) {
+                        Text("Click a file or use ↑↓ to preview.")
                             .font(.caption)
                             .foregroundStyle(Theme.muted)
                     } else {
                         Text("No preview audio in this pile.")
                             .font(.caption)
                             .foregroundStyle(Theme.muted)
-                    }
-
-                    if viewModel.inventory?.hasLogicProject == true || pile.kind == .logicPackage {
-                        Text("Logic project in this pile — close it in Logic before filing.")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
                     }
                 }
 
@@ -252,26 +315,13 @@ struct InboxView: View {
         }
     }
 
-    private var contentRows: [ContentRow] {
-        var rows: [ContentRow] = (viewModel.inventory?.entries ?? []).map(ContentRow.init)
-        let listed = Set(rows.map { $0.url.standardizedFileURL })
-        for url in viewModel.audioFiles where !listed.contains(url.standardizedFileURL) {
-            rows.append(
-                ContentRow(
-                    url: url,
-                    name: url.lastPathComponent,
-                    kindLabel: url.pathExtension.lowercased(),
-                    fileSize: 0,
-                    isAudio: true,
-                    isDirectory: false
-                )
-            )
-        }
-        return rows
+    private func isSelectedContent(_ url: URL) -> Bool {
+        viewModel.selectedContentID?.standardizedFileURL == url.standardizedFileURL
     }
 
-    private func isSelectedPreview(_ url: URL) -> Bool {
-        viewModel.selectedPreviewURL?.standardizedFileURL == url.standardizedFileURL
+    private var fileListHeight: CGFloat {
+        let rows = CGFloat(viewModel.contentItems.count)
+        return min(max(rows * 26 + 8, 88), 280)
     }
 
     private func pileSubtitle(_ pile: Pile) -> String {
@@ -309,31 +359,26 @@ struct InboxView: View {
     }
 }
 
-private struct ContentRow: Identifiable {
-    var id: URL { url }
-    var url: URL
-    var name: String
-    var kindLabel: String
-    var fileSize: Int64
-    var isAudio: Bool
-    var isDirectory: Bool
+private struct CoverPreview: View {
+    let url: URL
 
-    init(url: URL, name: String, kindLabel: String, fileSize: Int64, isAudio: Bool, isDirectory: Bool) {
-        self.url = url
-        self.name = name
-        self.kindLabel = kindLabel
-        self.fileSize = fileSize
-        self.isAudio = isAudio
-        self.isDirectory = isDirectory
-    }
-
-    init(_ entry: InventoryEntry) {
-        url = entry.url
-        name = entry.name
-        kindLabel = entry.kindLabel
-        fileSize = entry.fileSize
-        isAudio = entry.isAudio
-        isDirectory = entry.isDirectory
+    var body: some View {
+        Group {
+            if let image = NSImage(contentsOf: url) {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.white.opacity(0.06))
+            }
+        }
+        .frame(width: 96, height: 96)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }
 

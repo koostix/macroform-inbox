@@ -6,6 +6,7 @@ public struct InboxService {
     private let directoryScanner: DirectoryScanner
     private let inspector: FolderInspector
     private let picker: PreviewPicker
+    private let covers: CoverPicker
     private let resolver: DestinationResolver
     private let mover: PileMover
     private let wrapper: LooseFileWrapper
@@ -20,6 +21,7 @@ public struct InboxService {
         self.directoryScanner = DirectoryScanner()
         self.inspector = FolderInspector()
         self.picker = PreviewPicker()
+        self.covers = CoverPicker()
         self.resolver = DestinationResolver()
         self.mover = mover
         self.wrapper = wrapper
@@ -47,6 +49,10 @@ public struct InboxService {
 
     public func previewURL(for pile: Pile) throws -> URL? {
         try picker.previewFile(in: pile.sourceURL)
+    }
+
+    public func coverURL(for pile: Pile) throws -> URL? {
+        try covers.coverFile(in: pile.sourceURL)
     }
 
     public func audioFiles(in pile: Pile) throws -> [URL] {

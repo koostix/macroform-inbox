@@ -17,6 +17,7 @@ final class FolderInventoryTests: XCTestCase {
     func testInspectsImmediateChildrenAndSkipsHidden() throws {
         try write(name: "take.wav", size: 40)
         try write(name: "notes.txt", size: 8)
+        try write(name: "cover.jpg", size: 12)
         try FileManager.default.createDirectory(
             at: tempRoot.appendingPathComponent("Bounces", isDirectory: true),
             withIntermediateDirectories: true
@@ -24,13 +25,15 @@ final class FolderInventoryTests: XCTestCase {
         try write(name: ".DS_Store", size: 4)
 
         let inventory = try FolderInspector().inspect(at: tempRoot)
-        XCTAssertEqual(inventory.entries.map(\.name), ["Bounces", "notes.txt", "take.wav"])
+        XCTAssertEqual(inventory.entries.map(\.name), ["Bounces", "cover.jpg", "notes.txt", "take.wav"])
         XCTAssertEqual(inventory.entries.first(where: { $0.name == "take.wav" })?.isAudio, true)
+        XCTAssertEqual(inventory.entries.first(where: { $0.name == "cover.jpg" })?.isImage, true)
         XCTAssertEqual(inventory.entries.first(where: { $0.name == "Bounces" })?.isDirectory, true)
-        XCTAssertEqual(inventory.fileCount, 2)
-        XCTAssertEqual(inventory.totalBytes, 48)
+        XCTAssertEqual(inventory.fileCount, 3)
+        XCTAssertEqual(inventory.totalBytes, 60)
         XCTAssertFalse(inventory.hasLogicProject)
         XCTAssertTrue(inventory.summary.contains("1 audio"))
+        XCTAssertTrue(inventory.summary.contains("1 image"))
     }
 
     func testLooseFilesOnlySkipsSubfolders() throws {

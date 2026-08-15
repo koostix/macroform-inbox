@@ -9,6 +9,7 @@ public struct InventoryEntry: Equatable, Identifiable, Sendable {
     public var modified: Date
     public var isAudio: Bool
     public var isLogic: Bool
+    public var isImage: Bool
 
     public init(
         url: URL,
@@ -17,7 +18,8 @@ public struct InventoryEntry: Equatable, Identifiable, Sendable {
         fileSize: Int64,
         modified: Date,
         isAudio: Bool,
-        isLogic: Bool
+        isLogic: Bool,
+        isImage: Bool = false
     ) {
         self.url = url
         self.name = name
@@ -26,6 +28,7 @@ public struct InventoryEntry: Equatable, Identifiable, Sendable {
         self.modified = modified
         self.isAudio = isAudio
         self.isLogic = isLogic
+        self.isImage = isImage
     }
 
     public var kindLabel: String {
@@ -71,7 +74,9 @@ public struct FolderInventory: Equatable, Sendable {
         var parts: [String] = []
         let audioCount = entries.filter(\.isAudio).count
         let folderCount = entries.filter { $0.isDirectory && !$0.isLogic }.count
+        let imageCount = entries.filter(\.isImage).count
         if audioCount > 0 { parts.append("\(audioCount) audio") }
+        if imageCount > 0 { parts.append("\(imageCount) image\(imageCount == 1 ? "" : "s")") }
         if folderCount > 0 { parts.append("\(folderCount) folder\(folderCount == 1 ? "" : "s")") }
         if hasLogicProject { parts.append("Logic") }
         if parts.isEmpty { parts.append("\(fileCount) file\(fileCount == 1 ? "" : "s")") }
@@ -167,7 +172,8 @@ public struct FolderInspector: Sendable {
             fileSize: Int64(values.fileSize ?? 0),
             modified: values.contentModificationDate ?? Date(),
             isAudio: MediaTypes.isAudio(url),
-            isLogic: MediaTypes.isLogicPackage(url)
+            isLogic: MediaTypes.isLogicPackage(url),
+            isImage: MediaTypes.isImage(url)
         )
     }
 }

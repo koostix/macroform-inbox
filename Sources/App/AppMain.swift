@@ -38,6 +38,12 @@ struct MusicProjectsOrganizerApp: App {
                     .keyboardShortcut(.space, modifiers: [])
                     .disabled(viewModel.selectedPile == nil)
 
+                Button("Previous Audio") { viewModel.selectAdjacentPreview(offset: -1) }
+                    .disabled(viewModel.audioFiles.isEmpty)
+
+                Button("Next Audio") { viewModel.selectAdjacentPreview(offset: 1) }
+                    .disabled(viewModel.audioFiles.isEmpty)
+
                 Divider()
 
                 Button("Reveal Pile in Finder") { viewModel.revealSelected() }
