@@ -10,18 +10,7 @@ This is the processor for unnamed piles — recorder dumps (`EX000_*.WAV`), Logi
 
    `~/Desktop/_Music Projects/_Inbox`
 
-2. Open the app:
-
-   ```bash
-   cd ~/Desktop/MacroformInbox
-   swift run MacroformInbox
-   ```
-
-   Or after a release build:
-
-   ```bash
-   .build/release/MacroformInbox
-   ```
+2. Open **Macroform Inbox** from Applications (or Spotlight). No Terminal needed.
 
 3. Listen to the likely mix. Type a description and a BPM (20–300). Hit Return.
 
@@ -32,6 +21,14 @@ This is the processor for unnamed piles — recorder dumps (`EX000_*.WAV`), Logi
    The original dump is **moved**, not copied.
 
 Unnamed folders already sitting in `_Start` or `2_Revise` show up automatically. Logic `Untitled*.logicx` packages in `~/Music/Logic` do too. Those already in `_Start` / `2_Revise` are **renamed in place**. Inbox and Logic dumps move into `_Start`.
+
+To rebuild the double-clickable app after a code change:
+
+```bash
+cd ~/Desktop/MacroformInbox
+./scripts/package-app.sh
+cp -R "dist/Macroform Inbox.app" ~/Applications/
+```
 
 ## Keys
 

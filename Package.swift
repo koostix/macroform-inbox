@@ -10,7 +10,12 @@ let package = Package(
     ],
     targets: [
         .target(name: "MacroformInboxCore"),
-        .executableTarget(name: "App", dependencies: ["MacroformInboxCore"], path: "Sources/App"),
+        .executableTarget(
+            name: "App",
+            dependencies: ["MacroformInboxCore"],
+            path: "Sources/App",
+            exclude: ["Info.plist"]
+        ),
         .testTarget(name: "MacroformInboxCoreTests", dependencies: ["MacroformInboxCore"]),
     ],
     swiftLanguageModes: [.v5]
